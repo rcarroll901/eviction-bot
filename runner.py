@@ -34,7 +34,11 @@ def lambda_handler(event, context):
         case_id = message['case_id']
         
         print(f'Invoked by SQS: {case_id}')
-        driver = EvictionScraper()
+        if os.environ.get('LAMBDA_ENV') is not None:
+            driver = EvictionScraper()
+        else:
+            driver = EvictionScraper(chrome_path=None, driver_path="/usr/local/bin/chromedriver")
+        
         info = driver.scrape_info(case_id=case_id)
         info_list = EvictionScraper.format_scrape_data(info)
         driver.quit()
@@ -44,7 +48,7 @@ def lambda_handler(event, context):
         print('Upload of case info succeeded')
 
 
-# for one-off tests
+# for one-off
 def main():
     message = {'case_id': '2032259'}
     service = so.get_google_service()
@@ -54,28 +58,7 @@ def main():
 
     event = sqs_event
 
-
-    service = so.get_google_service()
-    # if cloudwatch event, then upload to SQS
-    if not event.get('Records'):
-        print('Invoked by CloudWatch')
-        case_ids = so.get_case_ids(service)
-        sq.upload(case_ids)
-        print('SQS cases upload complete')
-    else: # then sqs event
-        
-        message = event['Records'][0]['body']
-        message = json.loads(message)
-        case_id = message['case_id']
-
-        print(f'Invoked by SQS: {case_id}')
-        driver = EvictionScraper(chrome_path=None, driver_path="/usr/local/bin/chromedriver")
-        info = driver.scrape_info(case_id=case_id)
-        info_list = EvictionScraper.format_scrape_data(info)
-
-        rows = so.get_rows_to_update(service, case_id)
-        so.update_rows(service=service, info=info_list, rows=rows)
-        print('Upload of case info succeeded')
+    lambda_handler(event=event, context=None)
 
 if __name__ == '__main__':
     main()

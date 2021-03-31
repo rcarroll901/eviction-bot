@@ -4,7 +4,7 @@ VERSION := $(shell cat VERSION)
 COMMIT_SHA := $(shell git rev-parse HEAD)
 CHROMEDRIVERPATH := $$PWD/chromedriver
 
-.PHONY: build deploy test clean tools release
+.PHONY: build deploy test-scrape clean
 
 clean:
 	rm -rf package
@@ -37,9 +37,11 @@ clean:
 
 build: /dist/dependencies-layer.zip /dist/eviction-bot-lambda.zip
 	echo "Built app..."
-
 	cp -r dist tf/
-	echo "Moved into tf directory..."
+	echo "Moved into tf directory."
 
 deploy:
 	cd tf && terraform apply && cd ..
+
+test-scrape:
+	python3 runner.py
