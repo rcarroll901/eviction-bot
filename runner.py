@@ -51,10 +51,8 @@ def lambda_handler(event, context):
 # for one-off
 def main():
     message = {'case_id': '2032259'}
-    case_id = message['case_id']
     sqs_event = {'Records': [{'body': json.dumps(message)}]}
-    event = sqs_event
-    lambda_handler(event=event, context=None)
+    lambda_handler(event=sqs_event, context=None)
     print("Success")
 
 if __name__ == '__main__':
