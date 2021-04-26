@@ -8,6 +8,7 @@ from apiclient import discovery
 from google.oauth2 import service_account
 
 SPREADSHEET_ID = os.environ["SPREADSHEET_ID"]
+SHEET_NAME = os.environ["SHEET_NAME"]
 
 def get_google_service():
     scopes = ['https://www.googleapis.com/auth/spreadsheets']
@@ -15,31 +16,23 @@ def get_google_service():
     return discovery.build('sheets', 'v4', credentials=creds, cache_discovery=False)
 
 def get_rows_to_update(service, case_id):
-    case_id_range = "'FED FILINGS 2020-2021'!A:A"
-    result = service.spreadsheets().values().get(
-        spreadsheetId=SPREADSHEET_ID, range=case_id_range
-    ).execute()
-    values = result.get('values', [])
-
-    return [i+1 for i, x in enumerate(values) if x[0] == case_id]
+    case_ids = get_case_ids(service, unique=False)
+    return [i+1 for i, x in enumerate(case_ids) if x == case_id]
 
 def update_rows(service, info, rows):
-    first_row = rows[0]
-    num_rows = len(rows)
-    last_row = first_row + num_rows - 1
-    paste_range = f"'FED FILINGS 2020-2021'!O{first_row}:V{last_row}"
-    body = {'values': [info]*num_rows}
-    result = service.spreadsheets().values().update(
-        spreadsheetId=SPREADSHEET_ID, range=paste_range,
-        valueInputOption="RAW", body=body
-    ).execute()
+    for row in rows:
+        paste_range = f"{SHEET_NAME}!AN{row}:AV{row}"
+        body = {'values': [info]}
+        result = service.spreadsheets().values().update(
+            spreadsheetId=SPREADSHEET_ID, range=paste_range,
+            valueInputOption="RAW", body=body
+        ).execute()
     return result
 
-def get_case_ids(service):
-    case_id_range = "'FED FILINGS 2020-2021'!A:A"
+def get_case_ids(service, unique=True):
+    case_id_range = f"'{SHEET_NAME}'!S:S"
     result = service.spreadsheets().values().get(
         spreadsheetId=SPREADSHEET_ID, range=case_id_range
     ).execute()
     values = result.get('values', [])
-
-    return list(set([x[0] for x in values]))
+    return list(set([x[0] for x in values if (x != ['0'] and x != [])])) if unique else [x[0] if len(x)==1 else '' for x in values]
