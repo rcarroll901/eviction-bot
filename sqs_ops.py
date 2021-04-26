@@ -1,12 +1,17 @@
-
+import os
 import sys
 sys.path.append('/opt')
 import json
 import boto3
 
 def upload(case_ids):
+    """
+    Args:
+        case_ids (list(str)): List of case ids to scrape
+    """
+
     sqs = boto3.client('sqs', region_name='us-east-1')
-    queue_url = 'https://sqs.us-east-1.amazonaws.com/494557780599/dev-eviction-bot'
+    queue_url = os.environ["SQS_URL"]
     
     for c in case_ids:
         response = sqs.send_message(
@@ -15,3 +20,10 @@ def upload(case_ids):
         )
     
     return "Complete"
+
+def test():
+    status = upload(['2072534'])
+    print(status)
+
+if __name__ == '__main__':
+    test()

@@ -4,7 +4,7 @@ VERSION := $(shell cat VERSION)
 COMMIT_SHA := $(shell git rev-parse HEAD)
 CHROMEDRIVERPATH := $$PWD/chromedriver
 
-.PHONY: build deploy test-scrape clean
+.PHONY: build deploy test-scrape clean test-lambda
 
 clean:
 	rm -rf package
@@ -45,3 +45,6 @@ deploy:
 
 test-scrape:
 	python3 runner.py
+
+test-lambda:
+	python3 sqs_ops.py
