@@ -16,11 +16,15 @@ resource "aws_lambda_function" "eviction-bot" {
   # timeout is measured in n seconds
   timeout = 30
 
-  # environment {
-  #   variables = {
-
-  #   }
-  # }
+  environment {
+    variables = {
+      SQS_URL = var.env.sqs_url
+      SPREADSHEET_ID = var.env.spreadsheet_id
+      CASE_LINK = var.env.case_link
+      SHEET_NAME = var.env.sheet_name
+      LAMBDA_ENV = "True"
+    }
+  }
 
   tags = {
     Environment = var.env.name,

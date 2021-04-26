@@ -3,6 +3,10 @@ variable "env" {
   description = "Environment settings"
   type = object({
     name = string
+    sqs_url = string
+    spreadsheet_id = string
+    sheet_name = string
+    case_link = string
   })
 }
 
@@ -18,4 +22,3 @@ variable "aws" {
     secret = string
   })
 }
-
