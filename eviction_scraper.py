@@ -4,6 +4,7 @@ sys.path.append('/opt')
 sys.path.append('package')
 sys.path.append('package/bin')
 
+import os
 from datetime import datetime as dt
 from selenium.webdriver import Chrome
 from selenium.webdriver.support.ui import WebDriverWait
@@ -15,7 +16,7 @@ from selenium.webdriver.chrome.options import Options
 
 class EvictionScraper(Chrome):
     
-    CASE_LINK = "https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_doct.cp_dktrpt_docket_report?backto=D&case_id={}"
+    CASE_LINK = os.environ["CASE_LINK"]
     
     def __init__(self, chrome_path="/opt/bin/headless-chromium", driver_path="/opt/bin/chromedriver"):
         chrome_options = EvictionScraper.get_chrome_options(chrome_path)
@@ -47,7 +48,7 @@ class EvictionScraper(Chrome):
         return scrape_dict
 
     def _scrape_last_court_date(self):
-        scrape_dict = {}
+        scrape_dict = {'found': 'Yes'}
 
         # get last docket event
         dets_xpath = '(//a[@name="dockets"]//tr[@valign="top"])[last()]'
@@ -71,10 +72,10 @@ class EvictionScraper(Chrome):
         else:
             assert len(case_event_schedule) == 5, "case event schedule should be length 5"
             scrape_dict = dict(zip(scheduled_headings, case_event_schedule)) # zip together dict
-            scrape_dict['scheduled_date'] = dt.strptime(scrape_dict['scheduled_date'], "%d-%b-%Y%I:%M %p").strftime("%m-%d-%Y %I:%M %p")
+            scrape_dict['scheduled_date'] = dt.strptime(scrape_dict['scheduled_date'], "%d-%b-%Y%I:%M %p").strftime("%m-%d-%Y %I:%M %p") if scrape_dict['scheduled_date'] != '' else ''
         return scrape_dict
 
     @staticmethod
     def format_scrape_data(info):
-        order = ['scheduled_event', 'scheduled_date', 'scheduled_room', 'scheduled_loc', 'scheduled_judge', 'prev_event_date', 'prev_event_desc', 'prev_event_entry']
+        order = ['found', 'scheduled_date', 'scheduled_event', 'scheduled_room', 'scheduled_loc', 'scheduled_judge', 'prev_event_date', 'prev_event_desc', 'prev_event_entry']
         return [info[d] for d in order]
