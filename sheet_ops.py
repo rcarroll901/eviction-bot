@@ -21,7 +21,7 @@ def get_rows_to_update(service, case_id):
 
 def update_rows(service, info, rows):
     for row in rows:
-        paste_range = f"{SHEET_NAME}!AN{row}:AV{row}"
+        paste_range = f"{SHEET_NAME}!AZ{row}:BH{row}"
         body = {'values': [info]}
         result = service.spreadsheets().values().update(
             spreadsheetId=SPREADSHEET_ID, range=paste_range,
@@ -30,7 +30,7 @@ def update_rows(service, info, rows):
     return result
 
 def get_case_ids(service, unique=True):
-    case_id_range = f"'{SHEET_NAME}'!S:S"
+    case_id_range = f"'{SHEET_NAME}'!AM:AM"
     result = service.spreadsheets().values().get(
         spreadsheetId=SPREADSHEET_ID, range=case_id_range
     ).execute()

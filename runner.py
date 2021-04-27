@@ -49,11 +49,11 @@ def lambda_handler(event, context):
 
 
 # for one-off
-def main():
-    message = {'case_id': '2032259'}
+def test():
+    message = {'case_id': '2074895'}
     sqs_event = {'Records': [{'body': json.dumps(message)}]}
     lambda_handler(event=sqs_event, context=None)
     print("Success")
 
 if __name__ == '__main__':
-    main()
+    test()
