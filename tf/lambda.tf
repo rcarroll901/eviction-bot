@@ -18,10 +18,13 @@ resource "aws_lambda_function" "eviction-bot" {
 
   environment {
     variables = {
-      SQS_URL = var.env.sqs_url
-      SPREADSHEET_ID = var.env.spreadsheet_id
-      CASE_LINK = var.env.case_link
-      SHEET_NAME = var.env.sheet_name
+      SQS_URL = var.env.SQS_URL
+      SPREADSHEET_ID = var.env.SPREADSHEET_ID
+      CASE_LINK = var.env.CASE_LINK
+      SHEET_NAME = var.env.SHEET_NAME
+      CASE_COL = var.env.CASE_COL
+      PASTE_COL_BEGIN = var.env.PASTE_COL_BEGIN
+      PAST_COL_END = var.env.PASTE_COL_END
       LAMBDA_ENV = "True"
     }
   }

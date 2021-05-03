@@ -9,6 +9,9 @@ from google.oauth2 import service_account
 
 SPREADSHEET_ID = os.environ["SPREADSHEET_ID"]
 SHEET_NAME = os.environ["SHEET_NAME"]
+CASE_COL = os.environ["CASE_COL"]
+PASTE_COL_BEGIN = os.environ["PASTE_COL_BEGIN"]
+PASTE_COL_END = os.environ["PASTE_COL_END"]
 
 def get_google_service():
     scopes = ['https://www.googleapis.com/auth/spreadsheets']
@@ -21,7 +24,7 @@ def get_rows_to_update(service, case_id):
 
 def update_rows(service, info, rows):
     for row in rows:
-        paste_range = f"{SHEET_NAME}!AZ{row}:BH{row}"
+        paste_range = f"{SHEET_NAME}!{PASTE_COL_BEGIN}{row}:{PASTE_COL_END}{row}"
         body = {'values': [info]}
         result = service.spreadsheets().values().update(
             spreadsheetId=SPREADSHEET_ID, range=paste_range,
@@ -30,7 +33,7 @@ def update_rows(service, info, rows):
     return result
 
 def get_case_ids(service, unique=True):
-    case_id_range = f"'{SHEET_NAME}'!AM:AM"
+    case_id_range = f"'{SHEET_NAME}'!{CASE_COL}:{CASE_COL}"
     result = service.spreadsheets().values().get(
         spreadsheetId=SPREADSHEET_ID, range=case_id_range
     ).execute()
