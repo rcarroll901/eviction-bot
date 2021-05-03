@@ -3,7 +3,7 @@ resource "aws_lambda_function" "eviction-bot" {
   runtime       = "python3.7"
   memory_size   = 2048
   role          = aws_iam_role.eviction-bot.arn
-  reserved_concurrent_executions = 0
+  reserved_concurrent_executions = 3
 
   # Code artifact + dependencies
   filename         = "dist/eviction-bot-lambda.zip"
@@ -24,7 +24,7 @@ resource "aws_lambda_function" "eviction-bot" {
       SHEET_NAME = var.env.SHEET_NAME
       CASE_COL = var.env.CASE_COL
       PASTE_COL_BEGIN = var.env.PASTE_COL_BEGIN
-      PAST_COL_END = var.env.PASTE_COL_END
+      PASTE_COL_END = var.env.PASTE_COL_END
       LAMBDA_ENV = "True"
     }
   }

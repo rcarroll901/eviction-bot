@@ -70,7 +70,7 @@ class EvictionScraper(Chrome):
         if not case_event_schedule:
             scrape_dict = dict(zip(scheduled_headings, ['']*5)) # all are null
         else:
-            assert len(case_event_schedule) == 5, "case event schedule should be length 5"
+            case_event_schedule = case_event_schedule[-5:] # if multiple settings, grab last/updated one
             scrape_dict = dict(zip(scheduled_headings, case_event_schedule)) # zip together dict
             scrape_dict['scheduled_date'] = dt.strptime(scrape_dict['scheduled_date'], "%d-%b-%Y%I:%M %p").strftime("%m-%d-%Y %I:%M %p") if scrape_dict['scheduled_date'] != '' else ''
         return scrape_dict

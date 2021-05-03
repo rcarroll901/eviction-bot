@@ -3,10 +3,13 @@ variable "env" {
   description = "Environment settings"
   type = object({
     name = string
-    sqs_url = string
-    spreadsheet_id = string
-    sheet_name = string
-    case_link = string
+    SQS_URL = string
+    SPREADSHEET_ID = string
+    SHEET_NAME = string
+    CASE_LINK = string
+    CASE_COL = string
+    PASTE_COL_BEGIN = string
+    PASTE_COL_END = string
   })
 }
 

@@ -22,7 +22,7 @@ def upload(case_ids):
     return "Complete"
 
 def test():
-    status = upload(['2072534'])
+    status = upload(['2042705'])
     print(status)
 
 if __name__ == '__main__':

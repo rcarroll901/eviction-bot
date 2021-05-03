@@ -50,7 +50,7 @@ def lambda_handler(event, context):
 
 # for one-off
 def test():
-    message = {'case_id': '2074895'}
+    message = {'case_id': '2065765'}
     sqs_event = {'Records': [{'body': json.dumps(message)}]}
     lambda_handler(event=sqs_event, context=None)
     print("Success")
