@@ -22,7 +22,7 @@ Development Setup:
 4. Run `$ pipenv shell` to enter virtual environment
 
 Deployment Workflow:
-* `$ make clean`: Cleans dependencies -- both python and Chrome/chromedriver -- files (`package/`), zipped AWS Lambda layers (`dist/`), zipped AWS Lambda layers in Terraform dir (`tf/dist/`), and the homemade temporary directory (`temp/`)
+* `$ make clean`: Cleans Python dependencies files (`package/`), zipped AWS Lambda layers (`dist/`), zipped AWS Lambda layers in Terraform dir (`tf/dist/`), and the homemade temporary directory (`temp/`)
 * `$ make build`: Downloads dependencies and zips into AWS Lambda layers
 * `$ make test-scrape`: Runs a test scrape on an example case number and uploads to Airtable
 * `$ make test-flow`: Runs a scrape and then uploads to Airtable
