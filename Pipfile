@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+selenium = "*"
+boto3 = "*"
+airtable-python-wrapper = "*"
+lxml = "*"
+beautifulsoup4 = "*"
+
+[dev-packages]
+jupyter = "*"
