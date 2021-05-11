@@ -18,12 +18,6 @@ clean:
 	mkdir -p package
 	mkdir -p package/bin
 
-	# # Fetch lambda chrome
-	bin/get_lambda_chrome.sh
-
-	# # Fetch chromedriver
-	bin/get_chromedriver.sh
-
 	# # Package dependencies
 	mkdir -p .venv
 	pipenv sync
