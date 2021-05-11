@@ -15,7 +15,7 @@ airtable = Airtable(base_key=base_key, table_name=table_name, api_key=api_key)
 
 def get_case_ids():
     # read in all eviction record_id + case numbers
-    response = airtable.get_all(fields=['Eviction Case Number'], formula='{Eviction Case Number}!=""')
+    response = airtable.get_all(fields=['Eviction Case Number'], formula='AND({Eviction Case Number}!="", {Eviction Case Number}!="2031057")')
     return [{'record_id': r['id'], 'case_id': r['fields']['Eviction Case Number'][0]} for r in response]
 
 def update_row(record_id, scrape_dict):
