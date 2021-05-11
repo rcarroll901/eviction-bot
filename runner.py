@@ -11,27 +11,26 @@ import time
 from datetime import datetime as dt
 from subprocess import call
 
-import sheet_ops as so
-import sqs_ops as sq
-from eviction_scraper import EvictionScraper
+import evict_tools.persist as so
+import evict_tools.message as sq
+from evict_tools.scrape import EvictionScraper
 
 print('Loading bot function...')
-
 
 def lambda_handler(event, context):
     call('rm -rf /tmp/*', shell=True)
     
-    service = so.get_google_service()
-    # if cloudwatch event, then upload to SQS
+    # if cloudwatch event, then upload all cases to SQS
     if not event.get('Records'):
         print('Invoked by CloudWatch')
-        case_ids = so.get_case_ids(service)
+        case_ids = so.get_case_ids()
         sq.upload(case_ids)
         print('SQS cases upload complete')
-    else: # then sqs event
+    else: # if not, then sqs event = scrape case
         message = event['Records'][0]['body']
         message = json.loads(message)
         case_id = message['case_id']
+        record_id = message['record_id']
         
         print(f'Invoked by SQS: {case_id}')
         if os.environ.get('LAMBDA_ENV') is not None:
@@ -40,17 +39,15 @@ def lambda_handler(event, context):
             driver = EvictionScraper(chrome_path=None, driver_path="/usr/local/bin/chromedriver")
         
         info = driver.scrape_info(case_id=case_id)
-        info_list = EvictionScraper.format_scrape_data(info)
         driver.quit()
         
-        rows = so.get_rows_to_update(service, case_id)
-        so.update_rows(service=service, info=info_list, rows=rows)
+        so.update_row(record_id, info)
         print('Upload of case info succeeded')
 
 
 # for one-off
 def test():
-    message = {'case_id': '2065765'}
+    message = {'record_id': 'rec000bwe4zwJ7PUZ', 'case_id': '2046164'}
     sqs_event = {'Records': [{'body': json.dumps(message)}]}
     lambda_handler(event=sqs_event, context=None)
     print("Success")
