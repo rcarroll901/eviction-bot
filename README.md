@@ -1,4 +1,4 @@
-# Eviction Scraping Bot (Neighborhood Preservation, Inc. + US Digital Response)
+# Eviction Scraping Bot (Neighborhood Preservation, Inc.)
 ____
 The U.S. Department of Treasury granted $28.2M to the City of Memphis and Shelby County to administer [Emergency Rental Assistance (ERA)](https://www.memphistn.gov/news/memphis-and-shelby-county-emergency-rent-and-utility-assistance-program-frequently-asked-questions/) program. With thousands of applicants, it is impossible to manually check every single court date for every case. Therefore, in order to help attorneys appear on behalf of eviction defendants in an organized and consistent way, Innovate Memphis and Neighborhood Preservation, Inc. commissioned this application to scrape, transform, upload, and link data to the intake form responses of those applying for relief. 
 
