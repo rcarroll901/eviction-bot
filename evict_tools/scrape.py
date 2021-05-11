@@ -57,3 +57,24 @@ class EvictionScraper:
         next_date_info[1:3] = [' '.join(next_date_info[1:3])] # combine date and time entries of list
         scrape_dict = dict(zip(scheduled_headings, case_event_schedule)) # zip together dict
         return scrape_dict
+
+# for one-off
+def test():
+    scr = EvictionScraper()
+
+    # case with no next court date
+    case_id0 = '2046164'
+    info0 = scr.scrape_info(case_id0)
+
+    # one scheduled dates
+    case_id1 = '2070893'
+    info2 = scr.scrape_info(case_id1)
+
+    # two scheduled dates
+    case_id2 = '2062450'
+    info2 = scr.scrape_info(case_id2)
+
+    print("Success")
+
+if __name__ == '__main__':
+    test()

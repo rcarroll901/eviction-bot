@@ -4,7 +4,7 @@ VERSION := $(shell cat VERSION)
 COMMIT_SHA := $(shell git rev-parse HEAD)
 CHROMEDRIVERPATH := $$PWD/chromedriver
 
-.PHONY: build deploy test-scrape clean test-lambda
+.PHONY: build deploy test-scrape clean test-lambda test-flow
 
 clean:
 	rm -rf package
@@ -41,8 +41,11 @@ build: /dist/dependencies-layer.zip /dist/eviction-bot-lambda.zip
 deploy:
 	cd tf && terraform apply && cd ..
 
-test-scrape:
+test-flow:
 	python3 runner.py
+
+test-scrape:
+	python3 evict_tools/scrape.py
 
 test-lambda:
 	python3 evict_tools/message.py
