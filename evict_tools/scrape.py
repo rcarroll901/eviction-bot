@@ -44,18 +44,18 @@ class EvictionScraper:
         return prev_event_scrape_dict
 
     def _scrape_scheduled_court_date(self, soup):
-
-        # this message will appear if there is not a court date scheduled
-        if 'No case events were found' in soup.text:
-            return {}
         
         # Airtable column names
         scheduled_headings = ['Next Court Date Description', 'Next Court Date', 'Next Court Date Room', 'Next Court Date Location', 'Next Court Date Judge']
         
+        # this message will appear if there is not a court date scheduled. Erases current entries in airtable
+        if 'No case events were found' in soup.text:
+            return {key: None for key in scheduled_headings}
+
         # scrape info
         next_date_info = list(soup.select_one('a[name="events"] > table').select('tr')[-1].stripped_strings)
         next_date_info[1:3] = [' '.join(next_date_info[1:3])] # combine date and time entries of list
-        scrape_dict = dict(zip(scheduled_headings, case_event_schedule)) # zip together dict
+        scrape_dict = dict(zip(scheduled_headings, next_date_info)) # zip together dict
         return scrape_dict
 
 # for one-off
