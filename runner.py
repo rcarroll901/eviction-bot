@@ -27,20 +27,19 @@ def lambda_handler(event, context):
         sq.upload(case_ids)
         print('SQS cases upload complete')
     else: # if not, then sqs event = scrape case
+        print(f'Invoked by SQS: {case_id}')
+
+        # parse json message from SQS queue
         message = event['Records'][0]['body']
         message = json.loads(message)
         case_id = message['case_id']
         record_id = message['record_id']
         
-        print(f'Invoked by SQS: {case_id}')
-        if os.environ.get('LAMBDA_ENV') is not None:
-            driver = EvictionScraper()
-        else:
-            driver = EvictionScraper(chrome_path=None, driver_path="/usr/local/bin/chromedriver")
+        # scrape info using case number
+        scr = EvictionScraper()
+        info = scr.scrape_info(case_id=case_id)
         
-        info = driver.scrape_info(case_id=case_id)
-        driver.quit()
-        
+        # write to Airtable
         so.update_row(record_id, info)
         print('Upload of case info succeeded')
 
