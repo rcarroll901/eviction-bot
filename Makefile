@@ -23,15 +23,13 @@ clean:
 	pipenv sync
 	cp -a .venv/lib/python3.7/site-packages/. package/
 
-	# copy over python helper files
-	cp -R evict_tools/. package/evict_tools
 
 	# Add dependencies to layer .zip
 	cd package && zip -r9 ../dist/dependencies-layer.zip . && cd ..
 
 /dist/eviction-bot-lambda.zip:
 	mkdir -p dist
-	zip -g dist/eviction-bot-lambda.zip *.py
+	zip -g dist/eviction-bot-lambda.zip *.py evict_tools/*
 
 build: /dist/dependencies-layer.zip /dist/eviction-bot-lambda.zip
 	echo "Built app..."
