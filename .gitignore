@@ -8,6 +8,8 @@
 .LSOverride
 .env
 env.sh
+*.ipynb
+*/*.ipynb
 
 # Icon must end with two \r
 Icon

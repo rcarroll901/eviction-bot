@@ -5,6 +5,22 @@ The U.S. Department of Treasury granted $28.2M to the City of Memphis and Shelby
 Triggered by a recurring Cloudwatch alarm (multiple times per week), a Lambda function initiates the application by pulling the comprehensive list of eviction court case numbers from a Airtable maintained by NPI and US Digital Response and pushing the ~1k case numbers into an AWS SQS queue. For each case number in the queue, the same Lambda function scrapes the (previous and future) court dates and disposition information from the website, transforms that data into the client requested format, and uploads that into the same Airtable base. This AWS infrastructure is implemented in terraform, located in the `tf/` directory. 
 
 ___
+
+Development Setup:
+
+1. Obtain and save the following variables in a `.env` file:
+    ```
+    CASE_LINK="url_to_api_endpoint"
+    SQS_URL="url_to_AWS_SQS_endpoint"
+    AT_API_KEY="api_access_key_obtained_from_airtable"
+    AT_BASE_KEY="base_key_obtained_from_airtable"
+    AT_TABLE_NAME="table_name_which_contains_eviction_cases"
+    ```
+2. If `pipenv` is not installed on your machine, run `$ pip3 install pipenv`
+3. Run `$ pipenv sync` while working directory is in repository root (with `Pipfile.lock`)
+    * If you prefer developing in jupyter notebooks, run `$ pipenv sync -d`
+4. Run `$ pipenv shell` to enter virtual environment
+
 Deployment Workflow:
 * `$ make clean`: Cleans dependencies -- both python and Chrome/chromedriver -- files (`package/`), zipped AWS Lambda layers (`dist/`), zipped AWS Lambda layers in Terraform dir (`tf/dist/`), and the homemade temporary directory (`temp/`)
 * `$ make build`: Downloads dependencies and zips into AWS Lambda layers
@@ -12,15 +28,6 @@ Deployment Workflow:
 * `$ make test-flow`: Runs a scrape and then uploads to Airtable
 * `$ make deploy`: Applies Terraform code (which requires manual y/n approval from user to officially deploy) which pushes all new code and dependencies into AWS for implementation.
 * `$ make test-lambda`: Uploads a single case to SQS queue and fires lambda function. Results can be checked in AWS Cloudwatch
-
-Environmental Variables:
-```
-CASE_LINK="url_to_api_endpoint"
-SQS_URL="url_to_AWS_SQS_endpoint"
-AT_API_KEY="api_access_key_obtained_from_airtable"
-AT_BASE_KEY="base_key_obtained_from_airtable"
-AT_TABLE_NAME="table_name_which_contains_eviction_cases"
-```
 
 AWS/TF/AT Configuration:
 * List of cases are assumed to be in "Eviction Case Number" column in Airtable. Names of scraped data columns can be found in `evict_tools/scrape.py` within `EvictionScraper` methods.
