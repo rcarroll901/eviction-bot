@@ -27,14 +27,14 @@ def lambda_handler(event, context):
         sq.upload(case_ids)
         print('SQS cases upload complete')
     else: # if not, then sqs event = scrape case
-        print(f'Invoked by SQS: {case_id}')
 
         # parse json message from SQS queue
         message = event['Records'][0]['body']
         message = json.loads(message)
         case_id = message['case_id']
         record_id = message['record_id']
-        
+        print(f'Invoked by SQS: {case_id}')
+
         # scrape info using case number
         scr = EvictionScraper()
         info = scr.scrape_info(case_id=case_id)
@@ -46,7 +46,7 @@ def lambda_handler(event, context):
 
 # for one-off
 def test():
-    message = {'record_id': 'rec000bwe4zwJ7PUZ', 'case_id': '2046164'}
+    message = {'record_id': 'rec3n0wutEViyarOx', 'case_id': '2072380'}
     sqs_event = {'Records': [{'body': json.dumps(message)}]}
     lambda_handler(event=sqs_event, context=None)
     print("Success")
