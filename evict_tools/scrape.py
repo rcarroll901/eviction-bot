@@ -8,6 +8,13 @@ import os
 import requests as rq
 from bs4 import BeautifulSoup
 
+
+START_DATE = '13-MAR-2020'
+EVICTION_CASE_TYPE = '16%20-%20FED%20-%20OTHER'
+os.environ['NAME_SEARCH_LINK'] = 'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_cpty.cp_personcase_srch_details?backto=P&soundex_ind=&partial_ind=&last_name={}&first_name={}&middle_name=&begin_date={START_DATE}&end_date=&case_type={EVICTION_CASE_TYPE}&id_code=&PageNo=1'
+os.environ['CASE_LINK'] = 'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_doct.cp_dktrpt_docket_report?backto=P&case_id={}&begin_date=&end_date='
+
+
 class EvictionScraper:
     
     CASE_LINK = os.environ["CASE_LINK"]
@@ -28,6 +35,29 @@ class EvictionScraper:
         scrape_dict.update(sched_date)
 
         return scrape_dict
+    
+
+    def scrape_by_name(self, query_args):
+        """
+        attempt to identify an eviction case by searching for an applicant name. If a case exists, then get the hearing information.
+
+        params:
+            query_args: dictionary of query arguments used to identify and verify a case by a name search
+
+        returns:
+            dictionary of case information, if available
+        """
+        page = rq.get(self.NAME_SEARCH_LINK.format(query_args['last_name'], query_args['first_name']))
+        if 'No records found.' in page.text:
+            return {}
+        
+        soup = BeautifulSoup(page.text, 'html.parser')
+        case_id_el = soup.find('a', attrs={'href': re.compile('ck_public_qry_doct.cp_dktrpt_frames')})
+        case_id = case_id_el.get_text(strip=True)
+
+        scrape_dict = self.scrape_info(case_id)
+        return scrape_dict
+
 
     def _scrape_last_court_date(self, soup):
 
@@ -76,5 +106,18 @@ def test():
 
     print("Success")
 
+
+# for one-off
+def test_name_search():
+    scr = EvictionScraper()
+
+    # no case exists
+    query_args = {'last_name': 'person', 'first_name': 'not'}
+    info0 = scr.scrape_name_search(query_args)
+    print("Success")
+
+
 if __name__ == '__main__':
     test()
+    test_name_search()
+    

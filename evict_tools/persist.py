@@ -22,3 +22,8 @@ def update_row(record_id, scrape_dict):
     airtable.update(record_id, scrape_dict)
     return "Success"
 
+def get_names():
+    # read in all applicant record_id + first and last names
+    response = airtable.get_all(fields=['First name', 'Last name'])
+    return [{'record_id': r['id'], 'first_name': r['fields']['First name'][0], 'last_name': r['fields']['Last name'][0]} for r in response]
+
