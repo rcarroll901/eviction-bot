@@ -10,12 +10,6 @@ import requests as rq
 from bs4 import BeautifulSoup
 
 
-START_DATE = '13-MAR-2020'
-EVICTION_CASE_TYPE = '16%20-%20FED%20-%20OTHER'
-os.environ['NAME_SEARCH_LINK'] = 'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_cpty.cp_personcase_srch_details?backto=P&soundex_ind=&partial_ind=&last_name={last_name}&first_name={first_name}&middle_name=&begin_date={start_date}&end_date=&case_type={eviction_case_type}&id_code=&PageNo=1'
-os.environ['CASE_LINK'] = 'https://gscivildata.shelbycountytn.gov/pls/gnweb/ck_public_qry_doct.cp_dktrpt_docket_report?backto=P&case_id={}&begin_date=&end_date='
-
-
 class EvictionScraper:
     
     CASE_LINK = os.environ["CASE_LINK"]
@@ -42,41 +36,44 @@ class EvictionScraper:
 
         return scrape_dict
     
-
     def scrape_by_name(self, query_args):
         """
         attempt to identify an eviction case by searching for an applicant name. If a case exists, then get the hearing information.
 
-        params:
+        Args:
             query_args: dictionary of query arguments used to identify and verify a case by a name search
 
-        returns:
+        Returns:
             dictionary of case information, if available
         """
+
+        query_args_ = self._clean_names(query_args)
+
         page = rq.get(self.NAME_SEARCH_LINK.format(
-            last_name=query_args['last_name'], 
-            first_name=query_args['first_name'],
-            eviction_case_type=EVICTION_CASE_TYPE,
-            start_date=START_DATE
+            last_name=query_args_['last_name'],
+            first_name=query_args_['first_name']
             )
         )
         if 'No records found.' in page.text:
             return {}
         
         if 'Search Error' in page.text:
-            #TODO: clean party names to avoid search errors (such as removing parentheses)
-            return {}
+            return {'Name Search Error': 'Yes'}
         
         soup = BeautifulSoup(page.text, 'html.parser')
         case_id_el = soup.find_all('a', attrs={'href': re.compile('ck_public_qry_doct.cp_dktrpt_frames')})
 
         if len(case_id_el)> 1:
-            print(f'MULTIPLE CASES: {query_args}')
+            return {'Multiple Cases Returned': 'Yes'}
 
         case_id = case_id_el[0].get_text(strip=True)
         scrape_dict = self.scrape_info(case_id, get_case_title=True)
         return scrape_dict
 
+    def _clean_names(self, query_args):
+        query_args['last_name'] = re.sub(r"\([^()]*\)", "", query_args['last_name']).strip()
+        query_args['first_name'] = re.sub(r"\([^()]*\)", "", query_args['first_name']).strip()
+        return query_args
 
     def _scrape_last_court_date(self, soup):
 
@@ -112,10 +109,6 @@ class EvictionScraper:
         
         # Airtable column names
         scheduled_headings = ['Case Title']
-        
-        # this message will appear if there is not a court date scheduled. Erases current entries in airtable
-        #if 'No case events were found' in soup.text:
-        #    return {'Case Title': None}
 
         # scrape info
         case_title = list(soup.select_one('a[name="description"] > table').select('tr')[0].stripped_strings)
@@ -141,15 +134,20 @@ def test():
 
     print("Success")
 
-
-# for one-off
 def test_name_search():
     scr = EvictionScraper()
 
-    # no case exists
+    # no case exists, test returns empty dictionary
     query_args = {'last_name': 'person', 'first_name': 'not'}
-    info0 = scr.scrape_name_search(query_args)
-    print("Success")
+    info0 = scr.scrape_by_name(query_args)
+    assert not info0
+
+    # test to ensure parentheses and the text inside them are removed
+    # this happens occasionally and would cause an error in the query
+    query_args = {'last_name': 'person (true)', 'first_name': 'this (is not)'}
+    clean_query_args = scr._clean_names(query_args)
+    assert clean_query_args['last_name'] == 'person'
+    assert clean_query_args['first_name'] == 'this'
 
 
 if __name__ == '__main__':

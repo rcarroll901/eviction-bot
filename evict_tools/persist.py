@@ -10,6 +10,8 @@ from airtable import Airtable
 base_key = os.environ['AT_BASE_KEY']
 table_name = os.environ['AT_TABLE_NAME']
 api_key = os.environ['AT_API_KEY']
+applicant_table_name = os.environ['AT_TABLE_NAME_APPLICANT']
+
 airtable = Airtable(base_key=base_key, table_name=table_name, api_key=api_key)
 
 
@@ -24,6 +26,10 @@ def update_row(record_id, scrape_dict):
 
 def get_names():
     # read in all applicant record_id + first and last names
-    response = airtable.get_all(fields=['First name', 'Last name'])
-    return [{'record_id': r['id'], 'first_name': r['fields']['First name'][0], 'last_name': r['fields']['Last name'][0]} for r in response]
+    airtable = Airtable(base_key=base_key, table_name=applicant_table_name, api_key=api_key)
+    response = airtable.get_all(fields=['First name', 'Last name'], formula='AND({Last name}!="", {First name}!="", {Eviction Case Number}=="")')
+    return [{'record_id': r['id'], 'first_name': r['fields']['First name'], 'last_name': r['fields']['Last name']} for r in response]
 
+if __name__ == "__main__":
+    response = get_names()
+    print(response)
