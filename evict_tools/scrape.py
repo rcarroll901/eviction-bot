@@ -64,10 +64,17 @@ class EvictionScraper:
         case_id_el = soup.find_all('a', attrs={'href': re.compile('ck_public_qry_doct.cp_dktrpt_frames')})
 
         if len(case_id_el)> 1:
-            return {'Multiple Cases Returned': 'Yes'}
+            case_title_els = soup.find_all('b', text=re.compile('Case:'))
+            case_titles = ', '.join([' '.join(list(x.find_next('i').stripped_strings)) for x in case_title_els])
+            return {'Multiple Cases Returned': case_titles}
+
+        # extract the case title so staff can review whether it is a true match
+        case_title_el = soup.find('b', text=re.compile('Case:')).find_next('i')
+        case_title = ' '.join(list(case_title_el.stripped_strings))
 
         case_id = case_id_el[0].get_text(strip=True)
         scrape_dict = self.scrape_info(case_id, get_case_title=True)
+        scrape_dict.update({'Potential Eviction': 'True', 'Case Title': case_title})
         return scrape_dict
 
     def _clean_names(self, query_args):
@@ -148,6 +155,11 @@ def test_name_search():
     clean_query_args = scr._clean_names(query_args)
     assert clean_query_args['last_name'] == 'person'
     assert clean_query_args['first_name'] == 'this'
+    
+    # test multiple cases returned
+    query_args = {'last_name': os.getenv('TEST_LAST_NAME_MULTIPLE_CASES'), 'first_name': os.getenv('TEST_FIRST_NAME_MULTIPLE_CASES')}
+    info0 = scr.scrape_by_name(query_args)
+    assert 'Multiple Cases Returned' in info0.keys()
 
 
 if __name__ == '__main__':

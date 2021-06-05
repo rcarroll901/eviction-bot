@@ -41,7 +41,7 @@ def lambda_handler(event, context):
         # write to Airtable
         #TODO: need to determine which airtable table to push the data to and update accordingly.
         # potential issue if the case id search and name search return case info, but ideally they return the same information
-    #    so.update_row(message['record_id'], info)
+        so.update_row(message['record_id'], info)
         print('Upload of case info succeeded')
 
 
