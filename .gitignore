@@ -207,3 +207,4 @@ override.tf.json
 *secret*
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,terraform,python
+tf/.terraform.lock.hcl

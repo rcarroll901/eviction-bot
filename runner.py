@@ -44,6 +44,7 @@ def lambda_handler(event, context):
         except ValueError:
             print(f"Invalid Case ID: {case_id}")
             return "Fail"
+
         # scrape info using case number
         scr = EvictionScraper()
         info = scr.scrape_info(case_id=case_id)
