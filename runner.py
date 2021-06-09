@@ -37,6 +37,13 @@ def lambda_handler(event, context):
         record_id = message["record_id"]
         print(f"Invoked by SQS: {case_id}")
 
+        # case_id's in Airtable are being changed to nonsensical values
+        # so we test them here (since they should be all numbers/no letters)
+        try:
+            test = int(case_id)
+        except ValueError:
+            print(f"Invalid Case ID: {case_id}")
+            return "Fail"
         # scrape info using case number
         scr = EvictionScraper()
         info = scr.scrape_info(case_id=case_id)
@@ -44,6 +51,7 @@ def lambda_handler(event, context):
         # write to Airtable
         so.update_row(record_id, info)
         print("Upload of case info succeeded")
+        return "Success"
 
 
 # for one-off
