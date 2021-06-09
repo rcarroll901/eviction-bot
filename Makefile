@@ -21,7 +21,7 @@ clean:
 	# # Package dependencies
 	mkdir -p .venv
 	pipenv sync
-	cp -a .venv/lib/python3.7/site-packages/. package/
+	cp -a .venv/lib/python3.9/site-packages/* package/
 
 
 	# Add dependencies to layer .zip
