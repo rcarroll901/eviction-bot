@@ -38,12 +38,15 @@ class AirTableClass():
     def update_row(self, record_id, scrape_dict):
         # update airtable data. if the dictionary contains the applications_record_id field, then it has to 
         # create a new record in evictions and then link it to the corresponding applications record.
-        if 'applications_record_id' in scrape_dict:
-            evictions_record = scrape_dict.copy()
-            evictions_record.pop('applications_record_id')
-            resp = self.airtable_evictions.insert(evictions_record)
-            # update the applications table to point to the new eviction record
-            self.airtable_applications.update(scrape_dict['applications_record_id'], {'Eviction Cases': [resp['id']]})
+        if type(scrape_dict) == list and 'applications_record_id' in scrape_dict[0]:
+            new_record_ids = []
+            for _dict in scrape_dict:
+                evictions_record = _dict.copy()
+                evictions_record.pop('applications_record_id')
+                resp = self.airtable_evictions.insert(evictions_record)
+                new_record_ids.append(resp['id'])
+                # update the applications table to point to the new eviction record(s)
+            self.airtable_applications.update(scrape_dict[0]['applications_record_id'], {'Eviction Cases': new_record_ids})
         else:
             self.airtable_evictions.update(record_id, scrape_dict)
 

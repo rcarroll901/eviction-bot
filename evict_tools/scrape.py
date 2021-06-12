@@ -64,11 +64,12 @@ class EvictionScraper:
 
         if len(case_id_el)> 1:
             case_title_els = soup.find_all('b', text=re.compile('Case:'))
-            case_titles = ', '.join([' '.join(list(x.find_next('i').stripped_strings)) for x in case_title_els])
-            return {
-                'Multiple Cases Returned': case_titles,
-                'Potential Eviction': True
-            }
+            case_titles = [' '.join(list(x.find_next('i').stripped_strings)) for x in case_title_els]
+            return [{
+                'Case Title': case_title,
+                'Potential Eviction': True,
+                'Multiple Cases Returned': 'True'
+            } for case_title in case_titles]
 
         # extract the case title so staff can review whether it is a true match
         case_title_el = soup.find('b', text=re.compile('Case:')).find_next('i')
@@ -81,7 +82,7 @@ class EvictionScraper:
             'Case Title': case_title, 
             }
         )
-        return scrape_dict
+        return [scrape_dict]
 
     def _clean_names(self, query_args):
         query_args['last_name'] = re.sub(r"\([^()]*\)", "", query_args['last_name']).strip()
@@ -141,7 +142,7 @@ class EvictionScraper:
     def get_case(self, message):
         if 'first_name' in message:
             scrape_dict = self.scrape_by_name(message)
-            scrape_dict.update({'applications_record_id': message['record_id']}) # need to include so we can link the new evictions record to the application
+            scrape_dict = [{**d, 'applications_record_id': message['record_id']} for d in scrape_dict]
         else:
             scrape_dict = self.scrape_info(message['case_id'])
         print(scrape_dict)
@@ -177,7 +178,7 @@ def test_name_search():
     query_args = {'last_name': os.getenv('TEST_LAST_NAME_MATCH'), 'first_name': os.getenv('TEST_FIRST_NAME_MATCH')}
     info0 = scr.scrape_by_name(query_args)
     print(info0)
-    assert 'Next Court Date' in info0
+    assert 'Next Court Date' in info0[0]
 
     # no case exists, test returns empty dictionary
     query_args = {'last_name': 'person', 'first_name': 'not'}
@@ -194,7 +195,8 @@ def test_name_search():
     # test multiple cases returned
     query_args = {'last_name': os.getenv('TEST_LAST_NAME_MULTIPLE_CASES'), 'first_name': os.getenv('TEST_FIRST_NAME_MULTIPLE_CASES')}
     info0 = scr.scrape_by_name(query_args)
-    assert 'Multiple Cases Returned' in info0.keys()
+    print(info0)
+    assert 'Multiple Cases Returned' in info0[0].keys()
 
 
 if __name__ == '__main__':
