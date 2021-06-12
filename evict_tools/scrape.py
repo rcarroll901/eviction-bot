@@ -10,13 +10,13 @@ import requests as rq
 from bs4 import BeautifulSoup
 
 
-class EvictionScraper:
-    
-    CASE_LINK = os.environ["CASE_LINK"]
-    NAME_SEARCH_LINK = os.environ["NAME_SEARCH_LINK"]
+class EvictionScraper:    
+    def __init__(self):
+        self.case_link = os.environ["CASE_LINK"]
+        self.name_search_link = os.environ["NAME_SEARCH_LINK"]
     
     def scrape_info(self, case_id, get_case_title: bool=False):
-        page = rq.get(self.CASE_LINK.format(case_id))
+        page = rq.get(self.case_link.format(case_id))
 
         if 'No case was found' in page.text:
             return {}
@@ -46,10 +46,9 @@ class EvictionScraper:
         Returns:
             dictionary of case information, if available
         """
-
         query_args_ = self._clean_names(query_args)
 
-        page = rq.get(self.NAME_SEARCH_LINK.format(
+        page = rq.get(self.name_search_link.format(
             last_name=query_args_['last_name'],
             first_name=query_args_['first_name']
             )
@@ -66,7 +65,10 @@ class EvictionScraper:
         if len(case_id_el)> 1:
             case_title_els = soup.find_all('b', text=re.compile('Case:'))
             case_titles = ', '.join([' '.join(list(x.find_next('i').stripped_strings)) for x in case_title_els])
-            return {'Multiple Cases Returned': case_titles}
+            return {
+                'Multiple Cases Returned': case_titles,
+                'Potential Eviction': True
+            }
 
         # extract the case title so staff can review whether it is a true match
         case_title_el = soup.find('b', text=re.compile('Case:')).find_next('i')
@@ -74,7 +76,11 @@ class EvictionScraper:
 
         case_id = case_id_el[0].get_text(strip=True)
         scrape_dict = self.scrape_info(case_id, get_case_title=True)
-        scrape_dict.update({'Potential Eviction': 'True', 'Case Title': case_title})
+        scrape_dict.update({
+            'Potential Eviction': True, 
+            'Case Title': case_title, 
+            }
+        )
         return scrape_dict
 
     def _clean_names(self, query_args):
@@ -111,7 +117,6 @@ class EvictionScraper:
         scrape_dict = dict(zip(scheduled_headings, next_date_info)) # zip together dict
         return scrape_dict
     
-
     def _scrape_case_title(self, soup):
         
         # Airtable column names
@@ -122,6 +127,16 @@ class EvictionScraper:
         case_title = [case_title[1].replace('\n', '')]
         scrape_dict = dict(zip(scheduled_headings, case_title)) # zip together dict
         return scrape_dict
+    
+    def get_case(self, message):
+        if 'first_name' in message:
+            scrape_dict = self.scrape_by_name(message)
+            scrape_dict.update({'applications_record_id': message['record_id']}) # need to include so we can link the new evictions record to the application
+        else:
+            scrape_dict = self.scrape_info(message['case_id'])
+        print(scrape_dict)
+        return scrape_dict
+
 
 # for one-off
 def test():
@@ -143,6 +158,12 @@ def test():
 
 def test_name_search():
     scr = EvictionScraper()
+
+    # no case exists, test returns empty dictionary
+    query_args = {'last_name': os.getenv('TEST_LAST_NAME_MATCH'), 'first_name': os.getenv('TEST_FIRST_NAME_MATCH')}
+    info0 = scr.scrape_by_name(query_args)
+    print(info0)
+    assert 'Next Court Date' in info0
 
     # no case exists, test returns empty dictionary
     query_args = {'last_name': 'person', 'first_name': 'not'}

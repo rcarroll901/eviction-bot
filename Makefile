@@ -48,8 +48,5 @@ test-scrape:
 test-lambda:
 	python3 evict_tools/message.py
 
-test-flow-name-search:
-	python3 runner_name_search.py
-
 test-persist:
 	python3 evict_tools/persist.py

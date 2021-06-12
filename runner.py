@@ -20,36 +20,56 @@ print('Loading bot function...')
 def lambda_handler(event, context):
     call('rm -rf /tmp/*', shell=True)
     
+    airtable = so.AirTableClass()
     # if cloudwatch event, then upload all cases to SQS
     if not event.get('Records'):
         print('Invoked by CloudWatch')
-        case_ids = so.get_case_ids()
-        sq.upload(case_ids)
+        records = airtable.get_records()
+        sq.upload(records)
         print('SQS cases upload complete')
     else: # if not, then sqs event = scrape case
 
         # parse json message from SQS queue
         message = event['Records'][0]['body']
         message = json.loads(message)
-        case_id = message['case_id']
         record_id = message['record_id']
-        print(f'Invoked by SQS: {case_id}')
+        #print(f'Invoked by SQS: {case_id}')
 
         # scrape info using case number
         scr = EvictionScraper()
-        info = scr.scrape_info(case_id=case_id)
+        info = scr.get_case(message=message)
         
         # write to Airtable
-        so.update_row(record_id, info)
+        airtable.update_row(record_id, info)
         print('Upload of case info succeeded')
 
 
 # for one-off
-def test():
-    message = {'record_id': 'rec3n0wutEViyarOx', 'case_id': '2072380'}
+def test_case():
+    message = {'record_id': 'recTxh0dxxzaAocnD', 'case_id': '2072380'}
     sqs_event = {'Records': [{'body': json.dumps(message)}]}
     lambda_handler(event=sqs_event, context=None)
     print("Success")
 
+# for one-off
+def test_name():
+    message = {'record_id': 'recQENZIuEoEZgTmf', 
+    'last_name': os.getenv('TEST_LAST_NAME_MULTIPLE_CASES'), 'first_name': os.getenv('TEST_FIRST_NAME_MULTIPLE_CASES')}
+    sqs_event = {'Records': [{'body': json.dumps(message)}]}
+    lambda_handler(event=sqs_event, context=None)
+    print("Success")
+
+
+# for one-off
+def test_name2():
+    message = {'record_id': 'recFxXJpDBtq2wvwH', 
+    'last_name': os.getenv('TEST_LAST_NAME_MATCH'), 'first_name': os.getenv('TEST_FIRST_NAME_MATCH')}
+    sqs_event = {'Records': [{'body': json.dumps(message)}]}
+    lambda_handler(event=sqs_event, context=None)
+    print("Success")
+
+
 if __name__ == '__main__':
-    test()
+    test_case()
+    test_name()
+    test_name2()

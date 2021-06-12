@@ -8,28 +8,48 @@ from airtable import Airtable
 
 # get Airtable 
 base_key = os.environ['AT_BASE_KEY']
-table_name = os.environ['AT_TABLE_NAME']
+evictions_table_name = os.environ['AT_TABLE_NAME']
 api_key = os.environ['AT_API_KEY']
-applicant_table_name = os.environ['AT_TABLE_NAME_APPLICANT']
-
-airtable = Airtable(base_key=base_key, table_name=table_name, api_key=api_key)
+applications_table_name = os.environ['AT_TABLE_NAME_APPLICANT']
 
 
-def get_case_ids():
-    # read in all eviction record_id + case numbers
-    response = airtable.get_all(fields=['Eviction Case Number'], formula='AND({Eviction Case Number}!="", {Eviction Case Number}!="2031057")')
-    return [{'record_id': r['id'], 'case_id': r['fields']['Eviction Case Number'][0]} for r in response]
+class AirTableClass():
+    def __init__(self):
+        self.airtable_evictions = Airtable(base_key=base_key, table_name=evictions_table_name, api_key=api_key)
+        self.airtable_applications = Airtable(base_key=base_key, table_name=applications_table_name, api_key=api_key)
 
-def update_row(record_id, scrape_dict):
-    airtable.update(record_id, scrape_dict)
-    return "Success"
+    def get_case_ids(self):
+        # read in all eviction record_id + case numbers
+        response = self.airtable_evictions.get_all(fields=['Eviction Case Number'], formula='AND({Eviction Case Number}!="", {Eviction Case Number}!="2031057")')
+        return [{'record_id': r['id'], 'case_id': r['fields']['Eviction Case Number'][0]} for r in response]
 
-def get_names():
-    # read in all applicant record_id + first and last names
-    airtable = Airtable(base_key=base_key, table_name=applicant_table_name, api_key=api_key)
-    response = airtable.get_all(fields=['First name', 'Last name'], formula='AND({Last name}!="", {First name}!="", {Eviction Case Number}=="")')
-    return [{'record_id': r['id'], 'first_name': r['fields']['First name'], 'last_name': r['fields']['Last name']} for r in response]
+    def get_names(self):
+        # read in all applicant record_id + first and last names
+        response = self.airtable_applications.get_all(fields=['First name', 'Last name', 'Eviction Cases'])
+        valid_response = [record for record in response if 'First name' in record['fields'] and 'Last name' in record['fields'] and 'Eviction Cases' not in record['fields']]
+        return [{'record_id': r['id'], 'first_name': r['fields']['First name'], 'last_name': r['fields']['Last name']} for r in valid_response]
+
+    def get_records(self):
+        # get the case ids and names for both the case number and the partial name searches
+        _case_ids = self.get_case_ids()
+        _names = self.get_names()
+        return _case_ids + _names
+    
+    def update_row(self, record_id, scrape_dict):
+        # update airtable data. if the dictionary contains the applications_record_id field, then it has to 
+        # create a new record in evictions and then link it to the corresponding applications record.
+        if 'applications_record_id' in scrape_dict:
+            evictions_record = scrape_dict.copy()
+            evictions_record.pop('applications_record_id')
+            resp = self.airtable_evictions.insert(evictions_record)
+            # update the applications table to point to the new eviction record
+            self.airtable_applications.update(scrape_dict['applications_record_id'], {'Eviction Cases': [resp['id']]})
+        else:
+            self.airtable_evictions.update(record_id, scrape_dict)
+
+        return "Success"
+
 
 if __name__ == "__main__":
-    response = get_names()
-    print(response)
+    airtable_interface = AirTableClass()
+    response = airtable_interface.get_records()
