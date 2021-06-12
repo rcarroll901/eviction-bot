@@ -113,8 +113,18 @@ class EvictionScraper:
 
         # scrape info
         next_date_info = list(soup.select_one('a[name="events"] > table').select('tr')[-1].stripped_strings)
-        next_date_info[1:3] = [' '.join(next_date_info[1:3])] # combine date and time entries of list
-        scrape_dict = dict(zip(scheduled_headings, next_date_info)) # zip together dict
+        
+        # sometimes date + time are not listed
+        if len(next_date_info) == 6: # listed
+            next_date_info[1:3] = [' '.join(next_date_info[1:3])] # combine date and time entries of list
+        elif len(next_date_info) == 4: # not listed
+            next_date_info.insert(1, None)
+        else:
+            raise ValueError(f'returned list {next_date_info} should be length 4 or 6')
+
+        # zip together dict
+        scrape_dict = dict(zip(scheduled_headings, next_date_info)) 
+
         return scrape_dict
     
     def _scrape_case_title(self, soup):
@@ -149,6 +159,10 @@ def test():
     # one scheduled dates
     case_id1 = '2070893'
     info2 = scr.scrape_info(case_id1)
+
+    # one date with no date/time
+    case_id1b = '2065712'
+    info1b = scr.scrape_info(case_id1b)
 
     # two scheduled dates
     case_id2 = '2062450'
