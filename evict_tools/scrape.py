@@ -60,29 +60,26 @@ class EvictionScraper:
             return {'Name Search Error': 'Yes'}
         
         soup = BeautifulSoup(page.text, 'html.parser')
-        case_id_el = soup.find_all('a', attrs={'href': re.compile('ck_public_qry_doct.cp_dktrpt_frames')})
+        case_id_elements = soup.find_all('a', attrs={'href': re.compile('ck_public_qry_doct.cp_dktrpt_frames')})
 
-        if len(case_id_el)> 1:
-            case_title_els = soup.find_all('b', text=re.compile('Case:'))
-            case_titles = [' '.join(list(x.find_next('i').stripped_strings)) for x in case_title_els]
-            return [{
-                'Case Title': case_title,
-                'Potential Eviction': True,
-                'Multiple Cases Returned': 'True'
-            } for case_title in case_titles]
+        scrape_dict_list = []
+        for case_id_element in case_id_elements:
+            # extract the case title so staff can review whether it is a true match
+            case_title_el = case_id_element.find_parent('i')
+            case_title = ' '.join(list(case_title_el.stripped_strings))
+            case_id = case_id_element.get_text(strip=True)
+            scrape_dict = self.scrape_info(case_id, get_case_title=True)
+            scrape_dict.update({
+                'Potential Eviction': True, 
+                'Case Title': case_title, 
+                }
+            )
+            if len(case_id_elements) > 1:
+                # if multiple cases matched the name, add a flag
+                scrape_dict.update({'Multiple Cases Returned': 'True'})
 
-        # extract the case title so staff can review whether it is a true match
-        case_title_el = soup.find('b', text=re.compile('Case:')).find_next('i')
-        case_title = ' '.join(list(case_title_el.stripped_strings))
-
-        case_id = case_id_el[0].get_text(strip=True)
-        scrape_dict = self.scrape_info(case_id, get_case_title=True)
-        scrape_dict.update({
-            'Potential Eviction': True, 
-            'Case Title': case_title, 
-            }
-        )
-        return [scrape_dict]
+            scrape_dict_list.append(scrape_dict)
+        return scrape_dict_list
 
     def _clean_names(self, query_args):
         query_args['last_name'] = re.sub(r"\([^()]*\)", "", query_args['last_name']).strip()
