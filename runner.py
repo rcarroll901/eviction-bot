@@ -30,20 +30,22 @@ def lambda_handler(event, context):
         sq.upload(records)
         print('SQS cases upload complete')
     else: # if not, then sqs event = scrape case
-        # parse json message from SQS queue
-        message = event["Records"][0]["body"]
-        message = json.loads(message)
-        record_id = message['record_id']
-        #print(f'Invoked by SQS: {case_id}')
-
-        # scrape info using case number
-        scr = EvictionScraper()
-        info = scr.get_case(message=message)
-        
-        # write to Airtable
-        airtable.update_row(record_id, info)
-        print('Upload of case info succeeded')
-
+        try:
+            # parse json message from SQS queue
+            message = event["Records"][0]["body"]
+            message = json.loads(message)
+            record_id = message['record_id']
+            print(f'invoked by SQS: {message}')
+    
+            # scrape info using case number
+            scr = EvictionScraper()
+            info = scr.get_case(message=message)
+            # write to Airtable
+            airtable.update_row(record_id, info)
+            print('Upload of case info succeeded')
+        except Exception as err:
+            print(f'error detected: {message} : {err}')
+            raise err
 
 # for one-off
 def test_case():

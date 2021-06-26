@@ -23,6 +23,8 @@ resource "aws_lambda_function" "eviction-bot" {
       AT_API_KEY = var.env.AT_API_KEY
       AT_BASE_KEY = var.env.AT_BASE_KEY
       AT_TABLE_NAME = var.env.AT_TABLE_NAME
+      NAME_SEARCH_LINK = var.env.NAME_SEARCH_LINK
+      AT_TABLE_NAME_APPLICANT= var.env.AT_TABLE_NAME_APPLICANT
     }
   }
 

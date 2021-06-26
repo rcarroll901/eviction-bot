@@ -82,8 +82,8 @@ class EvictionScraper:
         return scrape_dict_list
 
     def _clean_names(self, query_args):
-        query_args['last_name'] = re.sub(r"\([^()]*\)", "", query_args['last_name']).strip()
-        query_args['first_name'] = re.sub(r"\([^()]*\)", "", query_args['first_name']).strip()
+        query_args['last_name'] = re.sub(r"\([^()]*\)", "", query_args['last_name']).replace("'", "").strip()
+        query_args['first_name'] = re.sub(r"\([^()]*\)", "", query_args['first_name']).replace("'", "")[:15].strip()
         return query_args
 
     def _scrape_last_court_date(self, soup):
@@ -91,14 +91,19 @@ class EvictionScraper:
         # column names in Airtable
         prev_date_headings = ['Previous Event Date', 'Previous Event Description', 'Previous Event Entry']
 
-        # get last docket event
-        last_date_info = list(soup.find('a', attrs={"name": "dockets"}).find_all('tr', attrs={'valign':'top'})[-1].stripped_strings)
-        last_date_info[:2] = [' '.join(last_date_info[:2])] # date + time str concatenation
-        last_date_info.pop(2) # get rid of extraneous "Entry"
-
-        # zip into dict
-        prev_event_scrape_dict = dict(zip(prev_date_headings, last_date_info))
-        return prev_event_scrape_dict
+        docket = soup.find('a', attrs={"name": "dockets"})
+        
+        if docket:
+            # get last docket event
+            last_date_info = list(docket.find_all('tr', attrs={'valign':'top'})[-1].stripped_strings)
+            last_date_info[:2] = [' '.join(last_date_info[:2])] # date + time str concatenation
+            last_date_info.pop(2) # get rid of extraneous "Entry"
+    
+            # zip into dict
+            prev_event_scrape_dict = dict(zip(prev_date_headings, last_date_info))
+            return prev_event_scrape_dict
+        else:
+            return {}
 
     def _scrape_scheduled_court_date(self, soup):
         
@@ -110,7 +115,10 @@ class EvictionScraper:
             return {key: None for key in scheduled_headings}
 
         # scrape info
-        next_date_info = list(soup.select_one('a[name="events"] > table').select('tr')[-1].stripped_strings)
+        event_table = soup.select_one('a[name="events"] > table')
+        if not event_table: 
+            return {}
+        next_date_info = list(event_table.select('tr')[-1].stripped_strings)
         
         # sometimes date + time are not listed
         if len(next_date_info) == 6: # listed
@@ -142,7 +150,6 @@ class EvictionScraper:
             scrape_dict = [{**d, 'applications_record_id': message['record_id']} for d in scrape_dict]
         else:
             scrape_dict = self.scrape_info(message['case_id'])
-        print(scrape_dict)
         return scrape_dict
 
 
