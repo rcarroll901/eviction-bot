@@ -47,3 +47,6 @@ test-scrape:
 
 test-lambda:
 	python3 evict_tools/message.py
+
+test-persist:
+	python3 evict_tools/persist.py
